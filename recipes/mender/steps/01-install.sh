@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+ARCH=$(dpkg --print-architecture)
+
+VERSION_CODENAME=$(. /etc/os-release; printf $VERSION_CODENAME)
+
+apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg-agent
+
+curl -fsSL https://downloads.mender.io/repos/debian/gpg \
+    > /etc/apt/trusted.gpg.d/mender.asc
+
+echo "deb [arch=$ARCH] https://downloads.mender.io/repos/device-components debian/${VERSION_CODENAME}/stable main" \
+    > /etc/apt/sources.list.d/mender.list
+
+apt-get update
+
+apt-get install -y mender-client mender-connect
+
+install -D -m 644 "${RECIPE_DIR}/files/mender-state.toml" \
+    "/etc/rugix/state/mender.toml"
+
+systemctl enable mender-client.service
+systemctl enable mender-connect.service
+
+mkdir -p /usr/lib/rugix-mender/bin
+install -D -m 755 "${RECIPE_DIR}/files/reboot" \
+    -t /usr/lib/rugix-mender/bin
+
+mkdir -p /usr/share/mender/modules/v3
+install -D -m 755 "${RECIPE_DIR}/files/rugix-bundle" \
+    -t /usr/share/mender/modules/v3
+
+mkdir -p /etc/systemd/system/mender-client.service.d
+install -D -m 644 "${RECIPE_DIR}/files/rugix-reboot-override.conf" \
+    -t /etc/systemd/system/mender-client.service.d

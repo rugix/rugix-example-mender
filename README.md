@@ -1,8 +1,8 @@
-# Rugpi: Quick Start Template for Mender
+# Rugix: Quick Start Template for Mender
 
-This template showcases how to build a [Rugpi](https://rugpi.io) image with [Mender](https://mender.io) integration.
+This template showcases how to build a [Rugix](https://rugix.org) image with [Mender](https://mender.io) integration.
 
-For general information about Rugpi and how to use it, check out [Rugpi's documentation](https://oss.silitics.com/rugpi/docs/getting-started).
+For general information about Rugix and how to use it, check out [Rugix's documentation](https://rugix.org/docs/getting-started).
 
 This template allows you to build images for:
 
@@ -10,14 +10,14 @@ This template allows you to build images for:
 - Any EFI-compatible system (ARM64 and AMD64).
 
 For Raspberry Pi, images can be built based on Raspberry Pi OS or Debian.
-Note that Rugpi also supports older models of Raspberry Pi, however, we do not showcase images for them here.
+Note that Rugix also supports older models of Raspberry Pi, however, we do not showcase images for them here.
 
 The images are ready-to-use and devices running them should connect to Mender's device management platform automatically.
 To this end, you must configure the tenant/organization token (details bellow).
-Note that while fully compatible with Mender's cloud offering and update client, **the actual update is handled by Rugpi**.
-In this setup, Mender only serves as a frontend for Rugpi's OTA update mechanism.
+Note that while fully compatible with Mender's cloud offering and update client, **the actual update is handled by Rugix**.
+In this setup, Mender only serves as a frontend for Rugix's OTA update mechanism.
 
-## 🔧 Configuration
+## Configuration
 
 To configure Mender, you need your Mender tenant/organization token.
 Note that this token, as any secret, should not be committed to Git.
@@ -26,7 +26,7 @@ To configure the token, copy the `env.template` file to `.env` and replace the p
 In addition, you may need to change the server URL in the [`mender.conf`](recipes/mender/files/mender.conf) configuration file.
 If you want to be able to connect via SSH, put your public SSH key in the respective layer configuration file in [`layers`](layers).
 
-## 🏗️ Building Images
+## Building Images
 
 To build an image for Raspberry Pi 4, including the necessary firmware update:
 
@@ -40,17 +40,19 @@ To build an image for Raspberry Pi 5 or 4, without the firmware update:
 ./run-bakery bake image rpi-raspios
 ```
 
-To create a Mender artifact from the produced `rpi-raspios` image:
+To create an update bundle and a Mender artifact from the produced `rpi-raspios` system:
 
 ```bash
+./run-bakery bake bundle --disable-compression rpi-raspios
+
 VERSION=$(date +'%Y%m%d.%H%M')
 mender-artifact write module-image \
     -n "Image ${VERSION}" \
     -t raspberrypi4 \
-    -T rugpi-image \
-    -f build/images/rpi-raspios.img \
+    -T rugix-bundle \
+    -f build/rpi-raspios/system.rugixb \
     -o build/${VERSION}.mender \
-    --software-name "Rugpi Image" \
+    --software-name "Rugix Image" \
     --software-version "${VERSION}"
 ```
 
@@ -66,7 +68,7 @@ To build an image that is directly usable with a VM (e.g., QEMU):
 ./run-bakery bake image efi-debian-amd64-vm
 ```
 
-## ℹ️ Remarks
+## Remarks
 
 ### GitHub Actions
 

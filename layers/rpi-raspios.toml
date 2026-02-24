@@ -1,12 +1,12 @@
 # Use Raspberry Pi OS Bookworm as a basis for the custom image.
 #
 # Note that you can also declare your own base layer(s). For examples, see:
-# https://github.com/silitics/rugpi/tree/main/repositories/core/layers
+# https://github.com/rugix/rugix/tree/main/repositories/core/layers
 parent = "core/raspios-bookworm"
 
 # Include recipes for the custom image.
 recipes = [
-    # Prepares the Raspberry Pi base image for usage with Rugpi.
+    # Prepares the Raspberry Pi base image for usage with Rugix.
     "core/rpi-raspios-setup",
     # Sets a static hostname (see parameters below).
     "core/set-hostname",
@@ -15,7 +15,7 @@ recipes = [
     # Configures SSH.
     "core/ssh",
     # Create a simple SBOM.
-    "rugpi-extra/simple-sbom",
+    "rugix-extra/simple-sbom",
     # Enable and configure the Mender client.
     "mender",
     # Enable the `hello-world` recipe installing the static webpage.
@@ -23,7 +23,7 @@ recipes = [
 ]
 
 [parameters."core/set-hostname"]
-hostname = "rugpi-template-mender"
+hostname = "rugix-template-mender"
 
 [parameters."core/pkg-cleanup"]
 autoremove = true
@@ -33,8 +33,5 @@ root_authorized_keys = """
 PLACE YOUR OWN PUBLIC SSH KEY HERE!
 """
 
-[parameters."core/rugpi-ctrl"]
-rugpi_admin = true  # Enable Rugpi Admin.
-
-[parameters."rugpi-extra/simple-sbom"]
+[parameters."rugix-extra/simple-sbom"]
 sbom_file = "build/rpi-raspios.sbom.txt"

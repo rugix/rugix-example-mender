@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -euo pipefail
+
+STATE="$1"
+FILES="$2"
+
+case "$STATE" in
+    SupportsRollback)
+        echo "Yes"
+        ;;
+    ArtifactInstall)
+        BUNDLE=$(find "${FILES}" -name "*.rugixb" -type f -print -quit)
+        mkdir -p /run/rugix/data/mender
+        rugix-ctrl system commit >/run/rugix/data/mender/update.log 2>&1
+        # Bundle verification is skipped here because Mender already handles
+        # artifact verification and integrity checks.
+        rugix-ctrl update install --reboot set \
+            --insecure-skip-bundle-verification \
+            "${BUNDLE}" >>/run/rugix/data/mender/update.log 2>&1
+        touch /run/rugix/.mender-reboot-spare
+        ;;
+    NeedsArtifactReboot)
+        echo "Automatic"
+        ;;
+    ArtifactVerifyReboot)
+        default_group=$(rugix-ctrl system info --json | jq -r '.boot.defaultGroup')
+        active_group=$(rugix-ctrl system info --json | jq -r '.boot.activeGroup')
+        if [ "${default_group}" == "${active_group}" ]; then
+            echo "Error: Active boot group is also the default boot group." >&2
+            exit 1;
+        fi
+        ;;
+    ArtifactCommit)
+        mkdir -p /run/rugix/data/mender
+        rugix-ctrl system commit >/run/rugix/data/mender/commit.log 2>&1
+        ;;
+esac
+
+exit 0

@@ -13,7 +13,7 @@ install -D -m 644 "${RECIPE_DIR}/files/device_type" -t /etc/mender
 
 # Inject Mender tenant token from the secret environment.
 echo ".env" >> "${LAYER_REBUILD_IF_CHANGED}"
-. "${RUGPI_PROJECT_DIR}/.env"
+. "${RUGIX_PROJECT_DIR}/.env"
 sed -i "s@%%MENDER_TENANT_TOKEN%%@${MENDER_TENANT_TOKEN}@g" /etc/mender/mender.conf
 
 # Install Mender inventory file.

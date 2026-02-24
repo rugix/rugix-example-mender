@@ -1,2 +1,3 @@
-description = "setup Mender"
-dependencies = ["rugpi-extra/mender"]
+description = "install and configure Mender"
+dependencies = ["core/pkg-update"]
+priority = 1_000

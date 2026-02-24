@@ -7,7 +7,7 @@ on:
 env:
   NAME: "Mender Template"
 
-jobs:  
+jobs:
   bake-image:
     name: Bake Images
     runs-on: ubuntu-latest
@@ -15,12 +15,12 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { image: rpi-raspios }
-          - { image: rpi-raspios-pi4 }
-          - { image: rpi-debian }
-          - { image: rpi-debian-pi4 }
-          - { image: efi-debian-amd64 }
-          - { image: efi-debian-arm64 }
+          - { system: rpi-raspios }
+          - { system: rpi-raspios-pi4 }
+          - { system: rpi-debian }
+          - { system: rpi-debian-pi4 }
+          - { system: efi-debian-amd64 }
+          - { system: efi-debian-arm64 }
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,7 +28,7 @@ jobs:
 
       - name: Install QEMU
         run: docker run --privileged --rm tonistiigi/binfmt --install arm64
-      
+
       - name: Prepare and Configure
         env:
           SECRET_ENV: ${{ secrets.ENV || '' }}
@@ -37,9 +37,12 @@ jobs:
           if [ -n "${SECRET_ENV}" ]; then
             echo "${SECRET_ENV}" > .env
           fi
-      
+
       - name: Bake Image
-        run: ./run-bakery bake image ${{ matrix.job.image }}
+        run: ./run-bakery bake image ${{ matrix.job.system }}
+
+      - name: Bake Bundle
+        run: ./run-bakery bake bundle --disable-compression ${{ matrix.job.system }}
 
       - name: Build Mender Artifact
         run: |
@@ -49,8 +52,8 @@ jobs:
           ./mender-artifact write module-image \
               -n "${NAME} ${VERSION}" \
               -t raspberrypi4 \
-              -T rugpi-image \
-              -f build/images/${{ matrix.job.image }}.img \
+              -T rugix-bundle \
+              -f build/${{ matrix.job.system }}/system.rugixb \
               -o build/${VERSION}.mender \
               --software-name "${NAME}" \
               --software-version "${VERSION}"
@@ -58,5 +61,5 @@ jobs:
       # - name: Upload Build Artifacts
       #   uses: actions/upload-artifact@v4
       #   with:
-      #     name: ${{ matrix.job.image }}
+      #     name: ${{ matrix.job.system }}
       #     path: build/*

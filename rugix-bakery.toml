@@ -1,18 +1,18 @@
 [repositories]
-rugpi-extra = { git = "https://github.com/silitics/rugpi-extra.git", branch = "v0.7" }
+rugix-extra = { git = "https://github.com/silitics/rugix-extra.git", branch = "v0.8" }
 
 # Image based on Raspberry Pi OS using the `tryboot` feature for A/B booting.
 #
 # This image supports the Raspberry Pi 4 and 5 family of devices.
 #
 # Note that Raspberry Pi 4 devices need to have the latest firmware installed.
-[images.rpi-raspios]
+[systems.rpi-raspios]
 layer = "rpi-raspios"
 architecture = "arm64"
 target = "rpi-tryboot"
 
 # Like the `rpi-raspios` image but with the firmware update for Raspberry Pi 4.
-[images.rpi-raspios-pi4]
+[systems.rpi-raspios-pi4]
 layer = "rpi-raspios-pi4"
 architecture = "arm64"
 target = "rpi-tryboot"
@@ -22,37 +22,43 @@ target = "rpi-tryboot"
 # This image supports the Raspberry Pi 4 and 5 family of devices.
 #
 # Note that Raspberry Pi 4 devices need to have the latest firmware installed.
-[images.rpi-debian]
+[systems.rpi-debian]
 layer = "rpi-debian"
 architecture = "arm64"
 target = "rpi-tryboot"
 
 # Like the `rpi-debian` image but with the firmware update for Raspberry Pi 4.
-[images.rpi-debian-pi4]
+[systems.rpi-debian-pi4]
 layer = "rpi-debian-pi4"
 architecture = "arm64"
 target = "rpi-tryboot"
 
 # Image based on Debian for EFI AMD64 systems.
-[images.efi-debian-amd64]
+[systems.efi-debian-amd64]
 layer = "efi-debian"
 architecture = "amd64"
 target = "generic-grub-efi"
 
-[images.efi-debian-amd64-vm]
+[systems.efi-debian-amd64-vm]
 layer = "efi-debian"
 architecture = "amd64"
 target = "generic-grub-efi"
 size = "16G"
 
 # Image based on Debian for EFI ARM64 systems.
-[images.efi-debian-arm64]
+[systems.efi-debian-arm64]
 layer = "efi-debian"
 architecture = "arm64"
 target = "generic-grub-efi"
 
-[images.efi-debian-arm64-vm]
+[systems.efi-debian-arm64-vm]
 layer = "efi-debian"
 architecture = "arm64"
 target = "generic-grub-efi"
 size = "16G"
+
+# Test system for Mender integration testing.
+[systems.test-mender-efi-arm64]
+layer = "test-mender-efi"
+architecture = "arm64"
+target = "generic-grub-efi"

@@ -1,3 +1,6 @@
-/.rugpi
+/.rugix
 /build
+/keys
 .env
+
+.claude
