@@ -46,17 +46,24 @@ jobs:
 
       - name: Build Mender Artifact
         run: |
-          wget https://downloads.mender.io/mender-artifact/3.11.0/linux/mender-artifact
-          chmod +x ./mender-artifact
           VERSION=$(date +'%Y%m%d.%H%M')
-          ./mender-artifact write module-image \
-              -n "${NAME} ${VERSION}" \
-              -t raspberrypi4 \
-              -T rugix-bundle \
-              -f build/${{ matrix.job.system }}/system.rugixb \
-              -o build/${VERSION}.mender \
-              --software-name "${NAME}" \
-              --software-version "${VERSION}"
+          podman run --rm \
+              -v "$(pwd)/build":/build \
+              docker.io/library/debian:bullseye-slim \
+              bash -c "
+                  apt-get update -qq && apt-get install -y -qq wget >/dev/null 2>&1
+                  wget -q -O /usr/local/bin/mender-artifact \
+                      https://downloads.mender.io/mender-artifact/4.0.0/linux/mender-artifact
+                  chmod +x /usr/local/bin/mender-artifact
+                  mender-artifact write module-image \
+                      -n '${NAME} ${VERSION}' \
+                      -t raspberrypi4 \
+                      -T rugix-bundle \
+                      -f /build/${{ matrix.job.system }}/system.rugixb \
+                      -o /build/${VERSION}.mender \
+                      --software-name '${NAME}' \
+                      --software-version '${VERSION}'
+              "
 
       # - name: Upload Build Artifacts
       #   uses: actions/upload-artifact@v4
