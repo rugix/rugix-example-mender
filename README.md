@@ -2,6 +2,9 @@
 
 This template showcases how to build a [Rugix](https://rugix.org) image with [Mender](https://mender.io) integration.
 
+> [!NOTE]
+> **Support:** This repository is covered by [Tier 3: Example Integration](https://rugix.org/support-commitment/#tier-example-integration) of the Rugix Support Commitment.
+
 For general information about Rugix and how to use it, check out [Rugix's documentation](https://rugix.org/docs/getting-started).
 
 This template allows you to build images for:
