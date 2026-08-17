@@ -2,9 +2,6 @@
 
 This template showcases how to build a [Rugix](https://rugix.org) image with [Mender](https://mender.io) integration.
 
-> [!NOTE]
-> **Support:** This repository is covered by [Tier 3: Example Integration](https://rugix.org/support-commitment/#tier-example-integration) of the Rugix Support Commitment.
-
 For general information about Rugix and how to use it, check out [Rugix's documentation](https://rugix.org/docs/getting-started).
 
 This template allows you to build images for:
@@ -85,3 +82,9 @@ If you want to extract the artifacts, uncomment the respective section in the wo
 
 As part of the image building process, a simple *software bill of materials* (SBOM) is generated.
 The SBOM is stored in `build/*.sbom.txt` and is also included in the build artifacts of the GitHub Actions workflow.
+
+## Support
+
+This repository is covered by
+[Tier 3: Example Integration](https://rugix.org/support-commitment/#tier-example-integration)
+of the Rugix Support Commitment.
