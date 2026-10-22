@@ -73,6 +73,8 @@ To build an image that is directly usable with a VM (e.g., QEMU):
 ### GitHub Actions
 
 This repository contains a workflow for GitHub Actions which builds all images (except the VM images) and a Mender artifact for each image.
+Each image builds on a runner matching its CPU architecture, without QEMU emulation.
+The artifact step installs a fixed Mender Artifact version from Mender's signed APT repository in a Debian Bookworm container.
 To inject the Mender tenant token, you need to create a GitHub Actions secret named `ENV` and put the contents of the `.env` file there.
 Note that the build artifacts contain the token and are thus not uploaded by default.
 If you want to extract the artifacts, uncomment the respective section in the workflow.

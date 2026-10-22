@@ -10,24 +10,21 @@ env:
 jobs:
   bake-image:
     name: Bake Images
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.job.runner }}
     strategy:
       fail-fast: false
       matrix:
         job:
-          - { system: rpi-raspios }
-          - { system: rpi-raspios-pi4 }
-          - { system: rpi-debian }
-          - { system: rpi-debian-pi4 }
-          - { system: efi-debian-amd64 }
-          - { system: efi-debian-arm64 }
+          - { system: rpi-raspios, runner: ubuntu-24.04-arm }
+          - { system: rpi-raspios-pi4, runner: ubuntu-24.04-arm }
+          - { system: rpi-debian, runner: ubuntu-24.04-arm }
+          - { system: rpi-debian-pi4, runner: ubuntu-24.04-arm }
+          - { system: efi-debian-amd64, runner: ubuntu-24.04 }
+          - { system: efi-debian-arm64, runner: ubuntu-24.04-arm }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: recursive
-
-      - name: Install QEMU
-        run: docker run --privileged --rm tonistiigi/binfmt --install arm64
 
       - name: Prepare and Configure
         env:
@@ -49,12 +46,16 @@ jobs:
           VERSION=$(date +'%Y%m%d.%H%M')
           podman run --rm \
               -v "$(pwd)/build":/build \
-              docker.io/library/debian:bullseye-slim \
-              bash -c "
-                  apt-get update -qq && apt-get install -y -qq wget >/dev/null 2>&1
-                  wget -q -O /usr/local/bin/mender-artifact \
-                      https://downloads.mender.io/mender-artifact/4.0.0/linux/mender-artifact
-                  chmod +x /usr/local/bin/mender-artifact
+              docker.io/library/debian:bookworm-slim \
+              bash -euc "
+                  apt-get update
+                  apt-get install -y --no-install-recommends wget ca-certificates
+                  wget -nv -O /etc/apt/keyrings/mender.asc \
+                      https://downloads.mender.io/repos/debian/gpg
+                  echo 'deb [signed-by=/etc/apt/keyrings/mender.asc] https://downloads.mender.io/repos/workstation-tools debian/bookworm/stable main' \
+                      > /etc/apt/sources.list.d/mender.list
+                  apt-get update
+                  apt-get install -y --no-install-recommends mender-artifact=4.4.2-1+debian+bookworm
                   mender-artifact write module-image \
                       -n '${NAME} ${VERSION}' \
                       -t raspberrypi4 \
