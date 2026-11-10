@@ -51,6 +51,10 @@ jobs:
       - name: Bake Bundle
         run: mise run build:bundle -- --disable-compression ${{ matrix.job.system }}
 
+      - name: Restore build directory ownership
+        # Docker creates these files as root; the host artifact CLI needs write access.
+        run: sudo chown -R "$(id -u):$(id -g)" build
+
       - name: Build Mender Artifact
         env:
           MENDER_ARTIFACT_DEVICE_TYPE: raspberrypi4
