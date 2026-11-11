@@ -61,4 +61,4 @@ jobs:
         run: |
           VERSION=$(date +'%Y%m%d.%H%M')
           export VERSION
-          MENDER_ARTIFACT_OUTPUT="build/$VERSION.mender" mise run build:artifact ${{ matrix.job.system }}
+          MENDER_ARTIFACT_OUTPUT="build/$VERSION.mender" nix develop --command mise run build:artifact ${{ matrix.job.system }}

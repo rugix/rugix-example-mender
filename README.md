@@ -28,6 +28,16 @@ If you want to be able to connect via SSH, put your public SSH key in the respec
 
 ## Building Images
 
+Install Docker or Podman. After configuring `.env`, you can build an image
+directly with the included Bakery launcher:
+
+```sh
+./run-bakery bake image rpi-raspios
+```
+
+Install [mise](https://mise.jdx.dev/) to use the equivalent convenience tasks
+below. These image and bundle builds use your installed container runtime.
+
 To build an image for Raspberry Pi 4, including the necessary firmware update:
 
 ```bash
@@ -40,10 +50,14 @@ To build an image for Raspberry Pi 5 or 4, without the firmware update:
 mise run build rpi-raspios
 ```
 
-To create an update bundle and a Mender artifact from the produced `rpi-raspios` system:
+To create an update bundle and a Mender artifact from the produced `rpi-raspios` system,
+install `mender-artifact` as described under [Development Tasks](#development-tasks):
 
 ```bash
 mise run build:bundle -- --disable-compression rpi-raspios
+
+# If Docker created root-owned build files:
+sudo chown -R "$(id -u):$(id -g)" build
 
 VERSION=$(date +'%Y%m%d.%H%M')
 export VERSION
@@ -70,7 +84,7 @@ mise run build efi-debian-amd64-vm
 
 This repository contains a workflow for GitHub Actions which builds all images (except the VM images) and a Mender artifact for each image.
 Each image builds on a runner matching its CPU architecture, without QEMU emulation.
-The artifact step uses the same mise task and pinned Nix CLI as local builds.
+The artifact step uses the shared mise task with the Nix-pinned Mender Artifact CLI.
 To inject the Mender tenant token, you need to create a GitHub Actions secret named `ENV` and put the contents of the `.env` file there.
 Note that the build artifacts contain the token and are thus not uploaded by default.
 If you want to extract the artifacts, uncomment the respective section in the workflow.
@@ -83,21 +97,34 @@ The SBOM is stored in `build/*.sbom.txt` and is also included in the build artif
 
 ## Development Tasks
 
-Install Nix with flakes enabled and mise. On x86-64 and AArch64 Linux, mise
-tasks select Nix for Podman, SSH tools, and `mender-artifact`.
+The tasks use installed host tools. Image and bundle builds require Docker
+or Podman; artifact creation requires `mender-artifact` (tested with 4.4.2).
+Integration tests use rootless Podman so their build files remain accessible
+to the host artifact CLI; they also require `ssh-keygen`. Docker can leave
+build files owned by root; restore ownership before running the host artifact
+CLI, as shown below.
 
 ~~~sh
 mise run build efi-debian-arm64
 mise run build:bundle efi-debian-arm64
+# If Docker created root-owned build files:
+sudo chown -R "$(id -u):$(id -g)" build
 mise run build:artifact efi-debian-arm64
-mise run test
+DOCKER=podman mise run test
 ~~~
 
 `build:artifact` wraps an existing bundle as a Mender module artifact. Local
-tests and CI share `scripts/build-mender-artifact.sh`; the command uses the
-pinned native CLI without installing packages inside a temporary container.
+tests and CI share `scripts/build-mender-artifact.sh` and use `mender-artifact`
+from `PATH`.
 Set `MENDER_ARTIFACT_DEVICE_TYPE`, `NAME`, `VERSION`, or
 `MENDER_ARTIFACT_OUTPUT` to override its metadata and output path.
+
+If you use Nix with flakes enabled, an optional shell supplies Podman, SSH
+tools, and Mender Artifact on x86-64 and AArch64 Linux. For example:
+
+```sh
+nix develop --command mise run build:artifact efi-debian-arm64
+```
 
 
 ## Support

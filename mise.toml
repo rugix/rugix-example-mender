@@ -1,29 +1,23 @@
 [tasks."bakery"]
-shell = "nix develop \"{{config_root}}\" --command bash -euo pipefail -c"
 description = "Run a Rugix Bakery command."
 run = "./run-bakery \"$@\""
 
 [tasks."build"]
-shell = "nix develop \"{{config_root}}\" --command bash -euo pipefail -c"
 description = "Build a system image."
 run = "./run-bakery bake image \"$@\""
 
 [tasks."build:bundle"]
-shell = "nix develop \"{{config_root}}\" --command bash -euo pipefail -c"
 description = "Build a system update bundle."
 run = "./run-bakery bake bundle \"$@\""
 
 [tasks."test"]
-shell = "nix develop \"{{config_root}}\" --command bash -euo pipefail -c"
 description = "Build and test the Mender integration."
 run = "bash scripts/run-tests.sh"
 
 [tasks."test:keys"]
-shell = "nix develop \"{{config_root}}\" --command bash -euo pipefail -c"
 description = "Generate the integration-test SSH keys."
 run = "bash scripts/generate-test-keys.sh"
 
 [tasks."build:artifact"]
-shell = "nix develop \"{{config_root}}\" --command bash -euo pipefail -c"
 description = "Wrap a system update bundle as a Mender module artifact."
 run = 'bash scripts/build-mender-artifact.sh "$@"'
