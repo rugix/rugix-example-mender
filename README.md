@@ -28,44 +28,56 @@ If you want to be able to connect via SSH, put your public SSH key in the respec
 
 ## Building Images
 
+Install Docker or Podman. After configuring `.env`, you can build an image
+directly with the included Bakery launcher:
+
+```sh
+./run-bakery bake image rpi-raspios
+```
+
+Install [mise](https://mise.jdx.dev/) to use the equivalent convenience tasks
+below. These image and bundle builds use your installed container runtime.
+
 To build an image for Raspberry Pi 4, including the necessary firmware update:
 
 ```bash
-./run-bakery bake image rpi-raspios-pi4
+mise run build rpi-raspios-pi4
 ```
 
 To build an image for Raspberry Pi 5 or 4, without the firmware update:
 
 ```bash
-./run-bakery bake image rpi-raspios
+mise run build rpi-raspios
 ```
+
+Creating a Mender artifact requires `mender-artifact` (tested with 4.4.2).
+On x86-64 or AArch64 Linux, an optional `nix develop` shell supplies it.
 
 To create an update bundle and a Mender artifact from the produced `rpi-raspios` system:
 
 ```bash
-./run-bakery bake bundle --disable-compression rpi-raspios
+mise run build:bundle -- --disable-compression rpi-raspios
+
+# If Docker created root-owned build files:
+sudo chown -R "$(id -u):$(id -g)" build
 
 VERSION=$(date +'%Y%m%d.%H%M')
-mender-artifact write module-image \
-    -n "Image ${VERSION}" \
-    -t raspberrypi4 \
-    -T rugix-bundle \
-    -f build/rpi-raspios/system.rugixb \
-    -o build/${VERSION}.mender \
-    --software-name "Rugix Image" \
-    --software-version "${VERSION}"
+export VERSION
+MENDER_ARTIFACT_DEVICE_TYPE=raspberrypi4 \
+MENDER_ARTIFACT_OUTPUT="build/$VERSION.mender" \
+    mise run build:artifact rpi-raspios
 ```
 
 To build an image for an AMD64 EFI-compatible system:
 
 ```bash
-./run-bakery bake image efi-debian-amd64
+mise run build efi-debian-amd64
 ```
 
 To build an image that is directly usable with a VM (e.g., QEMU):
 
 ```bash
-./run-bakery bake image efi-debian-amd64-vm
+mise run build efi-debian-amd64-vm
 ```
 
 ## Remarks
@@ -74,7 +86,6 @@ To build an image that is directly usable with a VM (e.g., QEMU):
 
 This repository contains a workflow for GitHub Actions which builds all images (except the VM images) and a Mender artifact for each image.
 Each image builds on a runner matching its CPU architecture, without QEMU emulation.
-The artifact step installs a fixed Mender Artifact version from Mender's signed APT repository in a Debian Bookworm container.
 To inject the Mender tenant token, you need to create a GitHub Actions secret named `ENV` and put the contents of the `.env` file there.
 Note that the build artifacts contain the token and are thus not uploaded by default.
 If you want to extract the artifacts, uncomment the respective section in the workflow.
@@ -84,6 +95,15 @@ If you want to extract the artifacts, uncomment the respective section in the wo
 
 As part of the image building process, a simple *software bill of materials* (SBOM) is generated.
 The SBOM is stored in `build/*.sbom.txt` and is also included in the build artifacts of the GitHub Actions workflow.
+
+## Testing
+
+Install `mender-artifact` and `ssh-keygen`, then run the integration tests
+with rootless Podman so the build files remain accessible to the host tools:
+
+```sh
+DOCKER=podman mise run test
+```
 
 ## Support
 

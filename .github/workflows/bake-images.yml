@@ -5,6 +5,7 @@ on:
   push:
 
 env:
+  DOCKER: docker
   NAME: "Mender Template"
 
 jobs:
@@ -26,6 +27,15 @@ jobs:
         with:
           submodules: recursive
 
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31
+      - uses: jdx/mise-action@8418fedb1110381a0d3ba51a7a415d7c1b884550 # v5.2.2
+        with:
+          install: false
+      - name: Install Project Tools
+        env:
+          MISE_GITHUB_TOKEN: ${{ github.token }}
+        run: mise install
+
       - name: Prepare and Configure
         env:
           SECRET_ENV: ${{ secrets.ENV || '' }}
@@ -36,38 +46,19 @@ jobs:
           fi
 
       - name: Bake Image
-        run: ./run-bakery bake image ${{ matrix.job.system }}
+        run: mise run build ${{ matrix.job.system }}
 
       - name: Bake Bundle
-        run: ./run-bakery bake bundle --disable-compression ${{ matrix.job.system }}
+        run: mise run build:bundle -- --disable-compression ${{ matrix.job.system }}
+
+      - name: Restore build directory ownership
+        # Docker creates these files as root; the host artifact CLI needs write access.
+        run: sudo chown -R "$(id -u):$(id -g)" build
 
       - name: Build Mender Artifact
+        env:
+          MENDER_ARTIFACT_DEVICE_TYPE: raspberrypi4
         run: |
           VERSION=$(date +'%Y%m%d.%H%M')
-          podman run --rm \
-              -v "$(pwd)/build":/build \
-              docker.io/library/debian:bookworm-slim \
-              bash -euc "
-                  apt-get update
-                  apt-get install -y --no-install-recommends wget ca-certificates
-                  wget -nv -O /etc/apt/keyrings/mender.asc \
-                      https://downloads.mender.io/repos/debian/gpg
-                  echo 'deb [signed-by=/etc/apt/keyrings/mender.asc] https://downloads.mender.io/repos/workstation-tools debian/bookworm/stable main' \
-                      > /etc/apt/sources.list.d/mender.list
-                  apt-get update
-                  apt-get install -y --no-install-recommends mender-artifact=4.4.2-1+debian+bookworm
-                  mender-artifact write module-image \
-                      -n '${NAME} ${VERSION}' \
-                      -t raspberrypi4 \
-                      -T rugix-bundle \
-                      -f /build/${{ matrix.job.system }}/system.rugixb \
-                      -o /build/${VERSION}.mender \
-                      --software-name '${NAME}' \
-                      --software-version '${VERSION}'
-              "
-
-      # - name: Upload Build Artifacts
-      #   uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-      #   with:
-      #     name: ${{ matrix.job.system }}
-      #     path: build/*
+          export VERSION
+          MENDER_ARTIFACT_OUTPUT="build/$VERSION.mender" nix develop --command mise run build:artifact ${{ matrix.job.system }}
